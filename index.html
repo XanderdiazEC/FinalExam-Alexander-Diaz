@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Exam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <link rel="stylesheet" href="Stylefinal.css">
+
+</head>
+<body class="bg-gray-100">
+    <div id="root" class="container mx-auto px-4 py-8"></div>
+
+    <script type="text/babel">
+        const App = () => {
+            const [packages, setPackages] = React.useState([]);
+            const [formData, setFormData] = React.useState({
+                recipientName: '',
+                packageId: '',
+                deliveryAddress: '',
+                weight: ''
+            });
+            const [errors, setErrors] = React.useState({});
+
+            // Validation Functions
+            const validateRecipientName = (name) => {
+                const nameRegex = /^[A-Za-z\s]+$/;
+                return nameRegex.test(name);
+            };
+
+            const validatePackageId = (id) => {
+                return /^\d+$/.test(id) && id.trim() !== '';
+            };
+
+            const validateDeliveryAddress = (address) => {
+                return address.trim() !== '' && !/\d/.test(address);
+            };
+
+            const validateWeight = (weight) => {
+                const parsedWeight = parseFloat(weight);
+                return !isNaN(parsedWeight) && parsedWeight > 0;
+            };
+
+            const generateTrackingCode = (packageId, weight) => {
+                const numPackageId = parseInt(packageId);
+                const numWeight = Math.round(parseFloat(weight));
+                return (numPackageId << 4 | numWeight).toString(2);
+            };
+
+            // Merge Sort Implementation
+            const mergeSort = (packages) => {
+                if (packages.length <= 1) return packages;
+
+                const middle = Math.floor(packages.length / 2);
+                const left = packages.slice(0, middle);
+                const right = packages.slice(middle);
+
+                return merge(mergeSort(left), mergeSort(right));
+            };
+
+            const merge = (left, right) => {
+                let result = [];
+                let leftIndex = 0;
+                let rightIndex = 0;
+
+                while (leftIndex < left.length && rightIndex < right.length) {
+                    if (left[leftIndex].weight <= right[rightIndex].weight) {
+                        result.push(left[leftIndex]);
+                        leftIndex++;
+                    } else {
+                        result.push(right[rightIndex]);
+                        rightIndex++;
+                    }
+                }
+
+                return result.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+            };
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({
+                    ...prev,
+                    [name]: value
+                }));
+            };
+
+            const validateForm = () => {
+                const newErrors = {};
+
+                if (!validateRecipientName(formData.recipientName)) {
+                    newErrors.recipientName = 'Recipient name must contain only alphabetic characters';
+                }
+
+                if (!validatePackageId(formData.packageId)) {
+                    newErrors.packageId = 'Package ID must be a non-empty numeric value';
+                }
+
+                if (!validateDeliveryAddress(formData.deliveryAddress)) {
+                    newErrors.deliveryAddress = 'Delivery address is required and cannot contain numbers';
+                }
+
+                if (!validateWeight(formData.weight)) {
+                    newErrors.weight = 'Weight must be a positive number greater than 0';
+                }
+
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            const handleAddPackage = () => {
+                if (validateForm()) {
+                    const newPackage = {
+                        ...formData,
+                        weight: parseFloat(formData.weight),
+                        trackingCode: generateTrackingCode(formData.packageId, formData.weight)
+                    };
+
+                    setPackages(prev => mergeSort([...prev, newPackage]));
+
+                    // Reset form
+                    setFormData({
+                        recipientName: '',
+                        packageId: '',
+                        deliveryAddress: '',
+                        weight: ''
+                    });
+                }
+            };
+
+            return (
+                <div className="max-w-2xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
+                    <div className="p-6">
+                        <h2 className="text-2xl font-bold mb-6 text-center">Package Tracking System</h2>
+                        
+                        <div className="space-y-4">
+                            {}
+                            <div>
+                                <input
+                                    type="text"
+                                    name="recipientName"
+                                    value={formData.recipientName}
+                                    onChange={handleInputChange}
+                                    placeholder="Recipient Name"
+                                    className={`w-full p-2 border rounded ${errors.recipientName ? 'border-red-500' : 'border-gray-300'}`}
+                                />
+                                {errors.recipientName && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.recipientName}</p>
+                                )}
+                            </div>
+
+                            {}
+                            <div>
+                                <input
+                                    type="text"
+                                    name="packageId"
+                                    value={formData.packageId}
+                                    onChange={handleInputChange}
+                                    placeholder="Package ID"
+                                    className={`w-full p-2 border rounded ${errors.packageId ? 'border-red-500' : 'border-gray-300'}`}
+                                />
+                                {errors.packageId && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.packageId}</p>
+                                )}
+                            </div>
+
+                            {}
+                            <div>
+                                <input
+                                    type="text"
+                                    name="deliveryAddress"
+                                    value={formData.deliveryAddress}
+                                    onChange={handleInputChange}
+                                    placeholder="Delivery Address"
+                                    className={`w-full p-2 border rounded ${errors.deliveryAddress ? 'border-red-500' : 'border-gray-300'}`}
+                                />
+                                {errors.deliveryAddress && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.deliveryAddress}</p>
+                                )}
+                            </div>
+
+                            {}
+                            <div>
+                                <input
+                                    type="text"
+                                    name="weight"
+                                    value={formData.weight}
+                                    onChange={handleInputChange}
+                                    placeholder="Weight (kg)"
+                                    className={`w-full p-2 border rounded ${errors.weight ? 'border-red-500' : 'border-gray-300'}`}
+                                />
+                                {errors.weight && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.weight}</p>
+                                )}
+                            </div>
+
+                            {}
+                            <button 
+                                onClick={handleAddPackage}
+                                className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300"
+                            >
+                                Add Package
+                            </button>
+                        </div>
+
+                        {}
+                        {packages.length > 0 && (
+                            <div className="mt-8">
+                                <h3 className="text-xl font-semibold mb-4">Sorted Packages (Lightest to Heaviest)</h3>
+                                <div className="space-y-4">
+                                    {packages.map((pkg, index) => (
+                                        <div 
+                                            key={index} 
+                                            className="bg-gray-100 p-4 rounded-lg shadow-sm"
+                                        >
+                                            <div className="flex justify-between">
+                                                <div>
+                                                    <p><strong>Name:</strong> {pkg.recipientName}</p>
+                                                    <p><strong>Address:</strong> {pkg.deliveryAddress}</p>
+                                                    <p><strong>Weight:</strong> {pkg.weight} kg</p>
+                                                </div>
+                                                <div>
+                                                    <p><strong>Tracking Code:</strong> {pkg.trackingCode}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
